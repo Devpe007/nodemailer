@@ -4,18 +4,20 @@ import { v4 as uuid } from 'uuid';
 @Entity('users')
 export class User {
     @PrimaryColumn()
-    readonly id: string;
+    public readonly id: string;
 
     @Column()
-    name: string;
+    public name: string;
 
     @Column()
-    email: string;
+    public email: string;
 
     @Column()
-    password: string;
+    public password: string;
 
-    constructor() {
+    constructor(props: Omit<User, 'id'>, id?: string) {
+        Object.assign(this, props);
+
         if(!this.id) {
             this.id = uuid();
         };
