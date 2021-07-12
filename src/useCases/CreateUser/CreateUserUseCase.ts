@@ -1,18 +1,17 @@
 import { getCustomRepository } from "typeorm";
-
-import { IMailProvider } from "../../providers/IMailProvider";
+import { hash } from 'bcrypt';
 
 import { UserRepository } from "../../repositories/implementations/UserRepository";
 
 import { ICreateUser } from "./CreateUserDTO";
 
-export class CreateUserUseCase {
-    constructor(
-        private mailProvider: IMailProvider,
-    ) {};
+import { SendMailUser } from "../../services/Mail/SendMailUser";
 
+export class CreateUserUseCase {
     async execute(data: ICreateUser) {
         const userRepository = getCustomRepository(UserRepository);
+
+        const sendMailUser = new SendMailUser();
 
         const userAlreadyExists = await userRepository.findOne({
             email: data.email,
@@ -22,26 +21,17 @@ export class CreateUserUseCase {
             throw new Error ('User already exists');
         };
 
+        const passwordHash = await hash(data.password, 8);
+
         const user = userRepository.create({
             name: data.name,
             email: data.email,
-            password: data.password,
+            password: passwordHash,
         });
 
         await userRepository.save(user);
 
-        await this.mailProvider.sendMail({
-            to: {
-                name: data.name,
-                email: data.email,
-            },
-            from: {
-                name: 'Ferreira Equipe',
-                email: 'ferreiravendas.80@gmail.com',
-            },
-            subject: 'Seja bem-vindo à plataforma',
-            body: '<p>Você já pode fazer login em nossa plataforma.</p>',
-        });
+        await sendMailUser.execute(user);
 
         return user;
     };
