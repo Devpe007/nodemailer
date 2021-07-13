@@ -1,6 +1,6 @@
 import { hash } from 'bcrypt';
 
-import { UserRepository } from "../../repositories/implementations/UserRepository";
+import { IUserRepository } from '../../repositories/IUserRepository';
 
 import { ICreateUser } from "./CreateUserDTO";
 
@@ -9,7 +9,7 @@ import { User } from "../../entities/User";
 
 export class CreateUserUseCase {
     constructor(
-        private userRepository: UserRepository,
+        private userRepository: IUserRepository,
         private mailProvider: IMailProvider,
     ) {};
 
