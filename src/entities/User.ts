@@ -15,9 +15,7 @@ export class User {
     @Column()
     public password: string;
 
-    constructor(props: Omit<User, 'id'>, id?: string) {
-        Object.assign(this, props);
-
+    constructor() {
         if(!this.id) {
             this.id = uuid();
         };

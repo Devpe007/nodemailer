@@ -1,20 +1,25 @@
-import { hash } from 'bcrypt';
+import { getCustomRepository } from 'typeorm';
 
-import { IUserRepository } from '../../repositories/IUserRepository';
+import { hash } from 'bcrypt';
 
 import { ICreateUser } from "./CreateUserDTO";
 
 import { IMailProvider } from "../../providers/IMailProvider";
+
 import { User } from "../../entities/User";
+import { UserRepository } from '../../repositories/UserRepository';
 
 export class CreateUserUseCase {
     constructor(
-        private userRepository: IUserRepository,
         private mailProvider: IMailProvider,
     ) {};
 
     async execute(data: ICreateUser) {
-        const userAlreadyExists = await this.userRepository.findByEmail(data.email);
+        const userRepository = getCustomRepository(UserRepository);
+
+        const userAlreadyExists = await userRepository.findOne({
+            email: data.email,
+        });
 
         if(userAlreadyExists) {
             throw new Error ('User already exists');
@@ -22,13 +27,13 @@ export class CreateUserUseCase {
 
         const passwordHash = await hash(data.password, 8);
 
-        const user = new User({
+        const user = userRepository.create({
             name: data.name,
             email: data.email,
             password: passwordHash,
         });
-
-        await this.userRepository.save(user);
+        
+        await userRepository.save(user);
 
         await this.mailProvider.sendMail({
             to: {
